@@ -150,7 +150,21 @@ export const initializeFirestoreStructure = async (forceCreate = false) => {
       console.log('ℹ️ Website redirect config already exists');
     }
 
-    // 4. Create/Update all ad slot configs
+    // 4. Create/Update Facebook meta config
+    const facebookMetaRef = ref(database, 'app_config/meta');
+    const facebookMetaSnap = await get(facebookMetaRef);
+    if (!facebookMetaSnap.exists() || forceCreate) {
+      await set(facebookMetaRef, {
+        app_id: '',
+        client_token: ''
+      });
+      console.log('✅ Created/Updated Facebook meta config');
+      createdCount++;
+    } else {
+      console.log('ℹ️ Facebook meta config already exists');
+    }
+
+    // 5. Create/Update all ad slot configs
     for (const slot of DEFAULT_AD_SLOTS) {
       const slotRef = ref(database, `ads_config/${slot.id}`);
       const slotSnap = await get(slotRef);

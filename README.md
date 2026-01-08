@@ -1,4 +1,4 @@
-# Ethereum Mining - Admin Panel
+# BTC Mining - Admin Panel
 
 A simple React admin panel for managing ads configuration in Firebase Realtime Database.
 

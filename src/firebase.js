@@ -11,14 +11,14 @@ import { initializeApp } from 'firebase/app';
 // See FIREBASE_SETUP_INSTRUCTIONS.md for detailed steps
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBEbQ6lGUAfBAro_HnEC0MJkk5C4t4hUq0",
-  authDomain: "usdt-mine-3c6f6.firebaseapp.com",
-  projectId: "usdt-mine-3c6f6",
-  storageBucket: "usdt-mine-3c6f6.firebasestorage.app",
-  messagingSenderId: "111634767746",
-  appId: "1:111634767746:web:33ffd64743ed1998d4399b",
-  measurementId: "G-BTP7W33TCV",
-  databaseURL: "https://usdt-mine-3c6f6-default-rtdb.firebaseio.com/"
+  apiKey: "AIzaSyCjsmt3LBJp0LQ8rN_AsfkKfRg9_5bqc8Y",
+  authDomain: "tronmine-fbe45.firebaseapp.com",
+  databaseURL: "https://tronmine-fbe45-default-rtdb.firebaseio.com",
+  projectId: "tronmine-fbe45",
+  storageBucket: "tronmine-fbe45.firebasestorage.app",
+  messagingSenderId: "116387770758",
+  appId: "1:116387770758:web:a1c17d6325021ffca5bc07",
+  measurementId: "G-5MCTG4Z815"
 };
 
 // Validate that config is not using placeholders

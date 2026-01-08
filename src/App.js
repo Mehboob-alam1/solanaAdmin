@@ -34,7 +34,8 @@ import {
   Settings as SettingsIcon,
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
-  Launch as LaunchIcon
+  Launch as LaunchIcon,
+  Facebook as FacebookIcon
 } from '@mui/icons-material';
 import { 
   ref, 
@@ -70,6 +71,7 @@ function App() {
   const [adsEnabled, setAdsEnabled] = useState(true);
   const [adSlots, setAdSlots] = useState({});
   const [websiteRedirect, setWebsiteRedirect] = useState({ enabled: false, url: '' });
+  const [facebookMeta, setFacebookMeta] = useState({ app_id: '', client_token: '' });
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
@@ -121,6 +123,25 @@ function App() {
         };
         await set(websiteRedirectRef, defaultWebsiteRedirect);
         setWebsiteRedirect(defaultWebsiteRedirect);
+      }
+
+      // Load Facebook meta config - create if doesn't exist
+      const facebookMetaRef = ref(database, 'app_config/meta');
+      const facebookMetaSnap = await get(facebookMetaRef);
+      if (facebookMetaSnap.exists()) {
+        const data = facebookMetaSnap.val();
+        setFacebookMeta({
+          app_id: data?.app_id || '',
+          client_token: data?.client_token || ''
+        });
+      } else {
+        // Create default Facebook meta config if missing
+        const defaultFacebookMeta = {
+          app_id: '',
+          client_token: ''
+        };
+        await set(facebookMetaRef, defaultFacebookMeta);
+        setFacebookMeta(defaultFacebookMeta);
       }
 
       // Load all ad slots - create missing ones
@@ -255,6 +276,22 @@ function App() {
     } catch (error) {
       console.error('Error updating website redirect URL:', error);
       showSnackbar(`Error updating website redirect URL: ${error.message}`, 'error');
+    }
+  };
+
+  const handleFacebookMetaChange = async (field, value) => {
+    try {
+      const database = getDatabase(app);
+      const updatedMeta = {
+        ...facebookMeta,
+        [field]: value.trim()
+      };
+      await set(ref(database, 'app_config/meta'), updatedMeta);
+      setFacebookMeta(updatedMeta);
+      showSnackbar(`Facebook ${field === 'app_id' ? 'App ID' : 'Client Token'} updated successfully`, 'success');
+    } catch (error) {
+      console.error('Error updating Facebook meta:', error);
+      showSnackbar(`Error updating Facebook meta: ${error.message}`, 'error');
     }
   };
 
@@ -413,7 +450,7 @@ function App() {
                   WebkitTextFillColor: 'transparent',
                   mb: 1
                 }}>
-                  Ethereum Mining
+                  BTC Mining
                 </Typography>
                 <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 400 }}>
                   Admin Panel - Ad Configuration
@@ -605,6 +642,98 @@ function App() {
                   }
                 />
               </Box>
+            </Box>
+          </Paper>
+        </Fade>
+
+        {/* Facebook Meta Configuration */}
+        <Fade in timeout={1400}>
+          <Paper sx={{ 
+            p: 4, 
+            mb: 4, 
+            background: 'linear-gradient(135deg, rgba(21,24,33,0.95) 0%, rgba(10,13,20,0.95) 100%)',
+            border: '1px solid rgba(255,155,191,0.2)',
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <FacebookIcon sx={{ color: '#FF9BBF', fontSize: 28 }} />
+                <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white' }}>
+                  Facebook Meta Configuration
+                </Typography>
+                {(facebookMeta.app_id && facebookMeta.client_token) ? (
+                  <CheckCircleIcon sx={{ color: '#4CAF50', fontSize: 28 }} />
+                ) : (
+                  <WarningIcon sx={{ color: '#ff5252', fontSize: 28 }} />
+                )}
+              </Box>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 3 }}>
+                Configure Facebook App ID and Client Token for Facebook Ads integration
+              </Typography>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Facebook App ID"
+                    value={facebookMeta.app_id}
+                    onChange={(e) => setFacebookMeta(prev => ({ ...prev, app_id: e.target.value }))}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== facebookMeta.app_id) {
+                        handleFacebookMetaChange('app_id', e.target.value);
+                      }
+                    }}
+                    placeholder="YOUR_FACEBOOK_APP_ID"
+                    InputLabelProps={{ style: { color: '#fff' } }}
+                    InputProps={{
+                      sx: {
+                        color: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#FF9BBF',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Facebook Client Token"
+                    value={facebookMeta.client_token}
+                    onChange={(e) => setFacebookMeta(prev => ({ ...prev, client_token: e.target.value }))}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== facebookMeta.client_token) {
+                        handleFacebookMetaChange('client_token', e.target.value);
+                      }
+                    }}
+                    placeholder="YOUR_FACEBOOK_CLIENT_TOKEN"
+                    type="password"
+                    InputLabelProps={{ style: { color: '#fff' } }}
+                    InputProps={{
+                      sx: {
+                        color: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#FF9BBF',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
             </Box>
           </Paper>
         </Fade>
