@@ -11,16 +11,15 @@ import { initializeApp } from 'firebase/app';
 // See FIREBASE_SETUP_INSTRUCTIONS.md for detailed steps
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB60-lMYZOODYFtOU6E6G2x_SlLd77JyCg",
-  authDomain: "btcmine-d624f.firebaseapp.com",
-  databaseURL: "https://btcmine-d624f-default-rtdb.firebaseio.com",
-  projectId: "btcmine-d624f",
-  storageBucket: "btcmine-d624f.firebasestorage.app",
-  messagingSenderId: "973909443886",
-  appId: "1:973909443886:web:eba8e58a346678e48326bf",
-  measurementId: "G-Y8R6JEBVW7"
+  apiKey: "AIzaSyA5_d-UAEo9EHezbONe8MT9rh_PSXuCjVg",
+  authDomain: "btcgroup-e89ed.firebaseapp.com",
+  databaseURL: "https://btcgroup-e89ed-default-rtdb.firebaseio.com",
+  projectId: "btcgroup-e89ed",
+  storageBucket: "btcgroup-e89ed.firebasestorage.app",
+  messagingSenderId: "673320984829",
+  appId: "1:673320984829:web:faad5770c61eaf6fe61e94",
+  measurementId: "G-9XGM9H2SNJ"
 };
-
 // Validate that config is not using placeholders
 const hasPlaceholders = 
   firebaseConfig.apiKey.includes('YOUR_') ||
