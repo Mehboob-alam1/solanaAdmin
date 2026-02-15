@@ -450,10 +450,10 @@ function App() {
                   WebkitTextFillColor: 'transparent',
                   mb: 1
                 }}>
-                  BTC Mining
+                  Eth 2 Panel
                 </Typography>
                 <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 400 }}>
-                  Admin Panel - Ad Configuration
+                  Ad Configuration
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 2 }}>
