@@ -11,15 +11,15 @@ import { initializeApp } from 'firebase/app';
 // See FIREBASE_SETUP_INSTRUCTIONS.md for detailed steps
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCPpyBeiDQGO6SqL2BxoliuTupWRxU8Bkg",
-  authDomain: "eth2group.firebaseapp.com",
-  databaseURL: "https://eth2group-default-rtdb.firebaseio.com",
-  projectId: "eth2group",
-  storageBucket: "eth2group.firebasestorage.app",
-  messagingSenderId: "1067023614234",
-  appId: "1:1067023614234:web:d31d203a83f345f12a2ca3",
-  measurementId: "G-3QEFK6VRHC"
-}
+  apiKey: "AIzaSyCZsldHLZXLBFa_64o7AlF4E_354Kkj1P4",
+  authDomain: "solanagroup-5c99d.firebaseapp.com",
+  databaseURL: "https://solanagroup-5c99d-default-rtdb.firebaseio.com",
+  projectId: "solanagroup-5c99d",
+  storageBucket: "solanagroup-5c99d.firebasestorage.app",
+  messagingSenderId: "609443641302",
+  appId: "1:609443641302:web:3b9fced8df89cb53db1677",
+  measurementId: "G-H2ZWHE39D7"
+};
 // Validate that config is not using placeholders
 const hasPlaceholders = 
   firebaseConfig.apiKey.includes('YOUR_') ||
