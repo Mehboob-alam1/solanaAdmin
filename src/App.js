@@ -450,7 +450,7 @@ function App() {
                   WebkitTextFillColor: 'transparent',
                   mb: 1
                 }}>
-                  Eth 2 Panel
+                  Solana Admin
                 </Typography>
                 <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 400 }}>
                   Ad Configuration
