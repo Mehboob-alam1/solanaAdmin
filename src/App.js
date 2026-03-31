@@ -27,7 +27,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  CircularProgress,
   IconButton,
 } from '@mui/material';
 import {
@@ -39,16 +38,9 @@ import {
   Launch as LaunchIcon,
   Facebook as FacebookIcon,
   ExpandMore as ExpandMoreIcon,
-  Logout as LogoutIcon,
   Code as CodeIcon,
 } from '@mui/icons-material';
 import { ref, get, set, getDatabase } from 'firebase/database';
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from 'firebase/auth';
 import app from './firebase';
 import { initializeFirestoreStructure, checkFirestoreStructure } from './utils/firestoreInit';
 import {
@@ -57,7 +49,6 @@ import {
   buildWebsiteRedirectPayload,
 } from './utils/websiteRedirect';
 import { AD_SLOTS } from './constants/adConfig';
-import LoginScreen from './LoginScreen';
 import './App.css';
 
 function emptySlot() {
@@ -71,25 +62,7 @@ function parsePriorityInput(str) {
     .filter(Boolean);
 }
 
-function mapAuthError(err) {
-  const code = err?.code || '';
-  if (code === 'auth/invalid-email') return 'Email non valida.';
-  if (code === 'auth/user-disabled') return 'Account disabilitato.';
-  if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-    return 'Credenziali non valide.';
-  }
-  if (code === 'auth/too-many-requests') return 'Troppi tentativi. Riprova più tardi.';
-  return err?.message || 'Accesso non riuscito.';
-}
-
 function App() {
-  const [firebaseUser, setFirebaseUser] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
-
   const [adsEnabled, setAdsEnabled] = useState(true);
   const [priorityOrderStr, setPriorityOrderStr] = useState('admob, adx, facebook');
   const [websiteForm, setWebsiteForm] = useState(() => normalizeWebsiteRedirectFromDb(null));
@@ -157,37 +130,13 @@ function App() {
       setAdSlots(slots);
     } catch (error) {
       console.error('Error loading data:', error);
-      showSnackbar(`Errore nel caricamento: ${error.message}`, 'error');
+      showSnackbar(`Failed to load data: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
   }, [showSnackbar]);
 
   useEffect(() => {
-    const auth = getAuth(app);
-    const database = getDatabase(app);
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      setFirebaseUser(user);
-      setLoginError('');
-      if (!user) {
-        setIsAdmin(false);
-        setAuthChecked(true);
-        return;
-      }
-      try {
-        const snap = await get(ref(database, `_admin_allowlist/${user.uid}`));
-        setIsAdmin(snap.val() === true);
-      } catch (e) {
-        console.error(e);
-        setIsAdmin(false);
-      }
-      setAuthChecked(true);
-    });
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    if (!authChecked || !firebaseUser || !isAdmin) return;
     let cancelled = false;
     (async () => {
       try {
@@ -196,14 +145,14 @@ function App() {
         if (!cancelled) setStructureMissing(!exists);
         if (!cancelled && !exists) {
           showSnackbar(
-            'Struttura Realtime Database incompleta: premi Init per creare i nodi predefiniti (solo admin).',
+            'Realtime Database structure is incomplete. Click Init to seed default nodes.',
             'warning'
           );
         }
         await loadData();
       } catch (e) {
         console.error(e);
-        if (!cancelled) showSnackbar(e.message || 'Errore avvio', 'error');
+        if (!cancelled) showSnackbar(e.message || 'Startup error', 'error');
       } finally {
         if (!cancelled) setBootLoading(false);
       }
@@ -211,27 +160,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [authChecked, firebaseUser, isAdmin, loadData, showSnackbar]);
-
-  const handleSignIn = async (email, password) => {
-    setLoginLoading(true);
-    setLoginError('');
-    try {
-      await signInWithEmailAndPassword(getAuth(app), email, password);
-    } catch (e) {
-      setLoginError(mapAuthError(e));
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(getAuth(app));
-    } catch (e) {
-      showSnackbar(e.message, 'error');
-    }
-  };
+  }, [loadData, showSnackbar]);
 
   const handleGlobalToggle = async (event) => {
     const newValue = event.target.checked;
@@ -239,25 +168,25 @@ function App() {
       const database = getDatabase(app);
       await set(ref(database, 'ads_config/global'), { ads_enabled: newValue });
       setAdsEnabled(newValue);
-      showSnackbar(newValue ? 'Annunci abilitati globalmente' : 'Annunci disabilitati globalmente', 'success');
+      showSnackbar(newValue ? 'Ads enabled globally' : 'Ads disabled globally', 'success');
     } catch (error) {
-      showSnackbar(`Errore: ${error.message}`, 'error');
+      showSnackbar(`Error: ${error.message}`, 'error');
     }
   };
 
   const handleSavePriority = async () => {
     const order = parsePriorityInput(priorityOrderStr);
     if (!order.length) {
-      showSnackbar('Inserisci almeno una rete nell’ordine (es. admob, adx, facebook).', 'warning');
+      showSnackbar('Enter at least one network in the order (e.g. admob, adx, facebook).', 'warning');
       return;
     }
     try {
       const database = getDatabase(app);
       await set(ref(database, 'ads_config/priority'), { order });
       setPriorityOrderStr(order.join(', '));
-      showSnackbar('Ordine reti salvato', 'success');
+      showSnackbar('Network order saved', 'success');
     } catch (error) {
-      showSnackbar(`Errore: ${error.message}`, 'error');
+      showSnackbar(`Error: ${error.message}`, 'error');
     }
   };
 
@@ -265,7 +194,7 @@ function App() {
     const errs = validateWebsiteRedirectForm(websiteForm);
     setWebsiteFieldErrors(errs);
     if (Object.keys(errs).length) {
-      showSnackbar('Correggi gli errori nel modulo redirect.', 'warning');
+      showSnackbar('Fix the errors in the website redirect form.', 'warning');
       return;
     }
     try {
@@ -274,9 +203,9 @@ function App() {
       await set(ref(database, 'app_config/website_redirect'), payload);
       setWebsiteForm(normalizeWebsiteRedirectFromDb(payload));
       setWebsiteFieldErrors({});
-      showSnackbar('Website redirect salvato', 'success');
+      showSnackbar('Website redirect saved', 'success');
     } catch (error) {
-      showSnackbar(`Errore: ${error.message}`, 'error');
+      showSnackbar(`Error: ${error.message}`, 'error');
     }
   };
 
@@ -289,9 +218,9 @@ function App() {
       };
       await set(ref(database, 'app_config/meta'), payload);
       setFacebookMeta(payload);
-      showSnackbar('Meta Facebook salvata', 'success');
+      showSnackbar('Facebook meta saved', 'success');
     } catch (error) {
-      showSnackbar(`Errore: ${error.message}`, 'error');
+      showSnackbar(`Error: ${error.message}`, 'error');
     }
   };
 
@@ -317,15 +246,15 @@ function App() {
       };
       await set(ref(database, `ads_config/${slotId}`), payload);
       setAdSlots((prev) => ({ ...prev, [slotId]: payload }));
-      showSnackbar(`Slot ${slotId} salvato`, 'success');
+      showSnackbar(`Slot ${slotId} saved`, 'success');
     } catch (error) {
-      showSnackbar(`Errore: ${error.message}`, 'error');
+      showSnackbar(`Error: ${error.message}`, 'error');
     }
   };
 
   const handleRefresh = async () => {
     await loadData();
-    showSnackbar('Dati aggiornati', 'success');
+    showSnackbar('Data refreshed', 'success');
   };
 
   const handleInitialize = async () => {
@@ -334,9 +263,12 @@ function App() {
       const result = await initializeFirestoreStructure(true);
       setStructureMissing(false);
       await loadData();
-      showSnackbar(`Init completato. Creati/aggiornati: ${result.created + result.updated} nodi.`, 'success');
+      showSnackbar(
+        `Init complete. Created/updated ${result.created + result.updated} node(s).`,
+        'success'
+      );
     } catch (error) {
-      showSnackbar(`Errore Init: ${error.message}`, 'error');
+      showSnackbar(`Init error: ${error.message}`, 'error');
     } finally {
       setInitRunning(false);
     }
@@ -389,63 +321,6 @@ function App() {
     }
   };
 
-  if (!authChecked) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, #05060A 0%, #0A0D14 50%, #05060A 100%)',
-        }}
-      >
-        <CircularProgress sx={{ color: '#FF9BBF' }} />
-      </Box>
-    );
-  }
-
-  if (!firebaseUser) {
-    return <LoginScreen onSignIn={handleSignIn} loading={loginLoading} error={loginError} />;
-  }
-
-  if (!isAdmin) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, #05060A 0%, #0A0D14 50%, #05060A 100%)',
-          p: 2,
-        }}
-      >
-        <Paper
-          sx={{
-            p: 4,
-            maxWidth: 480,
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(21,24,33,0.95) 0%, rgba(10,13,20,0.95) 100%)',
-            border: '1px solid rgba(255,82,82,0.35)',
-          }}
-        >
-          <Typography variant="h6" sx={{ color: '#ff8a80', mb: 2, fontWeight: 700 }}>
-            Accesso negato
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.75)', mb: 3 }}>
-            L’account non è presente in <code style={{ color: '#FF9BBF' }}>_admin_allowlist/&lt;uid&gt;</code> nel
-            Realtime Database. Chiedi a un owner di aggiungere il tuo UID con valore{' '}
-            <code style={{ color: '#FF9BBF' }}>true</code>.
-          </Typography>
-          <Button variant="contained" onClick={handleSignOut} startIcon={<LogoutIcon />} sx={{ bgcolor: '#FF9BBF' }}>
-            Esci
-          </Button>
-        </Paper>
-      </Box>
-    );
-  }
-
   const paperSx = {
     p: 4,
     mb: 4,
@@ -492,26 +367,11 @@ function App() {
                   Solana Admin
                 </Typography>
                 <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 400 }}>
-                  Realtime Database — app_config & ads_config
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', display: 'block', mt: 0.5 }}>
-                  {firebaseUser.email}
+                  Firebase Realtime Database — app_config &amp; ads_config
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<LogoutIcon />}
-                  onClick={handleSignOut}
-                  sx={{
-                    borderColor: 'rgba(255,155,191,0.5)',
-                    color: '#FF9BBF',
-                    '&:hover': { borderColor: '#FF9BBF', bgcolor: 'rgba(255,155,191,0.08)' },
-                  }}
-                >
-                  Esci
-                </Button>
-                <Tooltip title="Crea/aggiorna nodi predefiniti (richiede permessi admin)">
+                <Tooltip title="Create or update default nodes (requires write rules)">
                   <Button
                     variant="outlined"
                     startIcon={<SettingsIcon />}
@@ -537,13 +397,14 @@ function App() {
                     '&:hover': { borderColor: '#FF9BBF', bgcolor: 'rgba(255,155,191,0.08)' },
                   }}
                 >
-                  Aggiorna
+                  Refresh
                 </Button>
               </Box>
             </Box>
             {structureMissing ? (
               <Alert severity="warning" sx={{ mb: 2, bgcolor: 'rgba(255,193,7,0.12)', color: '#ffe082' }}>
-                Struttura assente o incompleta: usa <strong>Init</strong> dopo aver pubblicato le regole di sicurezza.
+                Structure missing or incomplete: click <strong>Init</strong> after your security rules allow writes to{' '}
+                <code>app_config</code> and <code>ads_config</code>.
               </Alert>
             ) : null}
             {(loading || bootLoading) && (
@@ -558,7 +419,7 @@ function App() {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white' }}>
-                Annunci globali
+                Global ads
               </Typography>
               <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
                 ads_config/global — ads_enabled
@@ -577,7 +438,7 @@ function App() {
               }
               label={
                 <Typography sx={{ color: 'white', fontWeight: 600 }}>
-                  {adsEnabled ? 'Abilitati' : 'Disabilitati'}
+                  {adsEnabled ? 'Enabled' : 'Disabled'}
                 </Typography>
               }
             />
@@ -586,10 +447,10 @@ function App() {
 
         <Paper sx={paperSx}>
           <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white', mb: 1 }}>
-            Ordine reti pubblicitarie
+            Network priority order
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
-            ads_config/priority — order (array di stringhe, separate da virgola o spazio)
+            ads_config/priority — order (string array, comma- or space-separated)
           </Typography>
           <Grid container spacing={2} alignItems="flex-start">
             <Grid item xs={12} md={8}>
@@ -618,7 +479,7 @@ function App() {
                 fullWidth
                 sx={{ mt: { xs: 0, md: 1 }, bgcolor: '#FF9BBF', '&:hover': { bgcolor: '#FF6BA3' } }}
               >
-                Salva ordine
+                Save order
               </Button>
             </Grid>
           </Grid>
@@ -637,7 +498,7 @@ function App() {
             )}
           </Box>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
-            app_config/website_redirect — validazione URL, mode, click_rate (0–100), click_frequency (≥1)
+            app_config/website_redirect — URL validation, mode, click_rate (0–100), click_frequency (≥ 1)
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}>
@@ -647,7 +508,9 @@ function App() {
                 value={websiteForm.url}
                 onChange={(e) => setWebsiteForm((f) => ({ ...f, url: e.target.value }))}
                 error={!!websiteFieldErrors.url}
-                helperText={websiteFieldErrors.url || 'URL completo o dominio (l’app può aggiungere https://)'}
+                helperText={
+                  websiteFieldErrors.url || 'Full URL or domain (the app may add https:// if missing)'
+                }
                 InputLabelProps={{ style: { color: '#fff' } }}
                 InputProps={{
                   sx: {
@@ -720,7 +583,9 @@ function App() {
                   setWebsiteForm((f) => ({ ...f, click_rate: e.target.value === '' ? '' : e.target.value }))
                 }
                 error={!!websiteFieldErrors.click_rate}
-                helperText={websiteFieldErrors.click_rate || 'Solo con mode random e every_click false'}
+                helperText={
+                  websiteFieldErrors.click_rate || 'Only when mode is random and every_click is false'
+                }
                 InputLabelProps={{ style: { color: '#fff' } }}
                 InputProps={{
                   sx: {
@@ -741,7 +606,9 @@ function App() {
                   setWebsiteForm((f) => ({ ...f, click_frequency: e.target.value === '' ? '' : e.target.value }))
                 }
                 error={!!websiteFieldErrors.click_frequency}
-                helperText={websiteFieldErrors.click_frequency || 'Solo con mode counter e every_click false'}
+                helperText={
+                  websiteFieldErrors.click_frequency || 'Only when mode is counter and every_click is false'
+                }
                 InputLabelProps={{ style: { color: '#fff' } }}
                 InputProps={{
                   sx: {
@@ -758,7 +625,7 @@ function App() {
                 onClick={handleSaveWebsiteRedirect}
                 sx={{ bgcolor: '#FF9BBF', '&:hover': { bgcolor: '#FF6BA3' } }}
               >
-                Salva website redirect
+                Save website redirect
               </Button>
             </Grid>
           </Grid>
@@ -768,7 +635,7 @@ function App() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <FacebookIcon sx={{ color: '#FF9BBF' }} />
             <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white' }}>
-              Facebook Meta
+              Facebook meta
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
@@ -814,7 +681,7 @@ function App() {
                 fullWidth
                 sx={{ mt: { xs: 0, md: 1 }, bgcolor: '#FF9BBF', '&:hover': { bgcolor: '#FF6BA3' } }}
               >
-                Salva
+                Save
               </Button>
             </Grid>
           </Grid>
@@ -822,10 +689,10 @@ function App() {
 
         <Paper sx={paperSx}>
           <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white', mb: 2 }}>
-            Slot pubblicitari
+            Ad slots
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
-            ads_config/&lt;slot&gt; — una riga per slot; salva la riga per scrivere su Firebase.
+            ads_config/&lt;slot&gt; — one row per slot; use the save icon to write that row to Firebase.
           </Typography>
           <TableContainer
             sx={{
@@ -839,13 +706,13 @@ function App() {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>Slot</TableCell>
-                  <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>Tipo</TableCell>
-                  <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>Abilitato</TableCell>
+                  <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>Type</TableCell>
+                  <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>Enabled</TableCell>
                   <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>admob_id</TableCell>
                   <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>adx_id</TableCell>
                   <TableCell sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>facebook_id</TableCell>
                   <TableCell align="right" sx={{ color: '#FF9BBF', fontWeight: 700, bgcolor: '#12151c' }}>
-                    Salva
+                    Save
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -919,7 +786,7 @@ function App() {
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <Tooltip title="Salva questo slot">
+                        <Tooltip title="Save this slot">
                           <IconButton
                             size="small"
                             onClick={() => handleSaveSlot(slot.id)}
@@ -948,12 +815,12 @@ function App() {
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#FF9BBF' }} />}>
             <CodeIcon sx={{ color: '#FF9BBF', mr: 1 }} />
-            <Typography fontWeight={700}>Anteprima JSON (stato attuale in UI)</Typography>
+            <Typography fontWeight={700}>JSON preview (current UI state)</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', display: 'block', mb: 1 }}>
-              Bozza ricostruita dai campi sopra (meta token mascherato). Non sostituisce la lettura dal server finché non
-              salvi.
+              Reconstructed from the fields above (meta token masked). Does not replace the server until you save each
+              section.
             </Typography>
             <Box
               component="pre"

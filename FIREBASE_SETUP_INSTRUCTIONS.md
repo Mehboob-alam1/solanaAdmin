@@ -42,38 +42,23 @@ const firebaseConfig = {
 };
 ```
 
-## Step 4: Enable Authentication (Email/Password)
+## Step 4: Set Realtime Database Rules
 
-1. Firebase Console → **Authentication** → **Sign-in method**
-2. Enable **Email/Password**
-3. Create a user for the admin panel (**Authentication** → **Users** → **Add user**)
+The admin panel does **not** use Firebase Authentication. The bundled **`database.rules.json`** allows public read/write on `app_config` and `ads_config` so the web UI can work without login.
 
-## Step 5: Admin allowlist (first-time bootstrap)
+⚠️ **Security:** Anyone with your database URL and project config can change ads and app config. Use Firebase Hosting with access control, IP restrictions, or replace these rules with authenticated writes (e.g. custom claims + Admin SDK) for production.
 
-Writes to `app_config/**` and `ads_config/**` are allowed only for UIDs listed under `_admin_allowlist` (see `database.rules.json` in this repo).
-
-1. Copy the new user’s **UID** from **Authentication** → **Users**
-2. Realtime Database → **Data** → add a node:
-   - Path: `_admin_allowlist/<UID>`
-   - Value: boolean `true`  
-   (Only the Console or the Admin SDK can write here; clients cannot.)
-
-## Step 6: Set Realtime Database Rules
-
-1. Copy the contents of **`database.rules.json`** from this repository into Firebase Console → **Realtime Database** → **Rules**, **or** run:
+1. Copy **`database.rules.json`** into Firebase Console → **Realtime Database** → **Rules**, **or** run:
    - `firebase deploy --only database` (requires `firebase.json` and Firebase CLI login)
 
-Summary of the rules:
+Rule summary:
 
-- **`app_config`** and **`ads_config`**: `.read` = `true` (the Flutter app can listen without auth; tighten if your app uses Firebase Auth and you want private config).
-- **`.write`**: only if `auth.uid` is listed in `_admin_allowlist` with value `true`.
-- **`_admin_allowlist/$uid`**: each user may **read only their own** entry (so the panel can verify admin status); **no client writes**.
+- **`app_config`** and **`ads_config`**: `.read` and `.write` = `true` (matches the no-auth admin panel).
 
-## Step 7: Verify Connection
+## Step 5: Verify Connection
 
 1. Start the admin panel: `npm start`
-2. Sign in with the admin email/password
-3. If the database is empty, click **Init** once to seed default nodes (requires admin write rules above)
+2. If the database is empty, click **Init** once to seed default nodes (rules must allow writes as above)
 
 ## Troubleshooting
 
@@ -84,9 +69,7 @@ Summary of the rules:
 - ✅ Make sure you're using the correct project ID
 
 ### Error: "permission-denied"
-- ✅ Check Realtime Database security rules (`database.rules.json`)
-- ✅ Ensure `_admin_allowlist/<your_uid>` is `true` in the database
-- ✅ You must be signed in to Firebase Auth in the browser before writing
+- ✅ Check Realtime Database security rules (`database.rules.json`) allow read/write on `app_config` and `ads_config`
 
 ### Error: "client is offline"
 - ✅ Check your internet connection

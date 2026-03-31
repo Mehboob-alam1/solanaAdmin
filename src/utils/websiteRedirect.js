@@ -33,14 +33,14 @@ export function normalizeWebsiteRedirectFromDb(d) {
 
 export function validateWebsiteRedirectUrl(urlStr) {
   const t = (urlStr || '').trim();
-  if (!t) return 'Inserisci un URL o un dominio.';
+  if (!t) return 'Enter a URL or domain.';
   const withProto = /^https?:\/\//i.test(t) ? t : `https://${t}`;
   try {
     const u = new URL(withProto);
-    if (!u.hostname) return 'URL non valido.';
+    if (!u.hostname) return 'Invalid URL.';
     return null;
   } catch {
-    return 'URL non valido.';
+    return 'Invalid URL.';
   }
 }
 
@@ -53,14 +53,14 @@ export function validateWebsiteRedirectForm(form) {
   if (form.mode === 'random' && !form.every_click) {
     const n = form.click_rate === '' ? NaN : Number(form.click_rate);
     if (Number.isNaN(n) || n < 0 || n > 100) {
-      errs.click_rate = 'Inserisci un numero tra 0 e 100.';
+      errs.click_rate = 'Enter a number between 0 and 100.';
     }
   }
   if (form.mode === 'counter' && !form.every_click) {
     const raw = form.click_frequency === '' ? '' : String(form.click_frequency).trim();
     const n = raw === '' ? NaN : parseInt(raw, 10);
     if (!Number.isFinite(n) || n < 1 || String(n) !== raw) {
-      errs.click_frequency = 'Inserisci un intero ≥ 1.';
+      errs.click_frequency = 'Enter an integer ≥ 1.';
     }
   }
   return errs;
