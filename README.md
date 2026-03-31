@@ -111,8 +111,6 @@ The admin panel manages the `ads_config` path in Realtime Database:
 ads_config/
   ├── global/          (Global ads enabled/disabled)
   │   └── ads_enabled: true
-  ├── priority/       (Network priority order)
-  │   └── order: ["admob", "adx", "facebook"]
   ├── banner_home/     (Home screen banner)
   │   ├── enabled: true
   │   ├── admob_id: "..."

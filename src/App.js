@@ -55,16 +55,8 @@ function emptySlot() {
   return { enabled: false, admob_id: '', adx_id: '', facebook_id: '' };
 }
 
-function parsePriorityInput(str) {
-  return str
-    .split(/[\s,]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
 function App() {
   const [adsEnabled, setAdsEnabled] = useState(true);
-  const [priorityOrderStr, setPriorityOrderStr] = useState('admob, adx, facebook');
   const [websiteForm, setWebsiteForm] = useState(() => normalizeWebsiteRedirectFromDb(null));
   const [websiteFieldErrors, setWebsiteFieldErrors] = useState({});
   const [facebookMeta, setFacebookMeta] = useState({ app_id: '', client_token: '' });
@@ -88,14 +80,6 @@ function App() {
 
       const globalSnap = await get(ref(database, 'ads_config/global'));
       setAdsEnabled(globalSnap.exists() ? globalSnap.val()?.ads_enabled !== false : true);
-
-      const prioritySnap = await get(ref(database, 'ads_config/priority'));
-      if (prioritySnap.exists()) {
-        const o = prioritySnap.val()?.order;
-        setPriorityOrderStr(Array.isArray(o) && o.length ? o.join(', ') : 'admob, adx, facebook');
-      } else {
-        setPriorityOrderStr('admob, adx, facebook');
-      }
 
       const websiteSnap = await get(ref(database, 'app_config/website_redirect'));
       setWebsiteForm(normalizeWebsiteRedirectFromDb(websiteSnap.exists() ? websiteSnap.val() : null));
@@ -169,22 +153,6 @@ function App() {
       await set(ref(database, 'ads_config/global'), { ads_enabled: newValue });
       setAdsEnabled(newValue);
       showSnackbar(newValue ? 'Ads enabled globally' : 'Ads disabled globally', 'success');
-    } catch (error) {
-      showSnackbar(`Error: ${error.message}`, 'error');
-    }
-  };
-
-  const handleSavePriority = async () => {
-    const order = parsePriorityInput(priorityOrderStr);
-    if (!order.length) {
-      showSnackbar('Enter at least one network in the order (e.g. admob, adx, facebook).', 'warning');
-      return;
-    }
-    try {
-      const database = getDatabase(app);
-      await set(ref(database, 'ads_config/priority'), { order });
-      setPriorityOrderStr(order.join(', '));
-      showSnackbar('Network order saved', 'success');
     } catch (error) {
       showSnackbar(`Error: ${error.message}`, 'error');
     }
@@ -283,7 +251,6 @@ function App() {
   }, [websiteForm]);
 
   const jsonPreview = useMemo(() => {
-    const order = parsePriorityInput(priorityOrderStr);
     const slots = {};
     AD_SLOTS.forEach((s) => {
       slots[s.id] = adSlots[s.id] || emptySlot();
@@ -298,11 +265,10 @@ function App() {
       },
       ads_config: {
         global: { ads_enabled: adsEnabled },
-        priority: { order: order.length ? order : ['admob', 'adx', 'facebook'] },
         ...slots,
       },
     };
-  }, [adsEnabled, priorityOrderStr, facebookMeta, adSlots, websiteRedirectPreview]);
+  }, [adsEnabled, facebookMeta, adSlots, websiteRedirectPreview]);
 
   const getTypeColor = (type) => {
     switch (type) {
@@ -443,46 +409,6 @@ function App() {
               }
             />
           </Box>
-        </Paper>
-
-        <Paper sx={paperSx}>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white', mb: 1 }}>
-            Network priority order
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
-            ads_config/priority — order (string array, comma- or space-separated)
-          </Typography>
-          <Grid container spacing={2} alignItems="flex-start">
-            <Grid item xs={12} md={8}>
-              <TextField
-                fullWidth
-                label="order"
-                value={priorityOrderStr}
-                onChange={(e) => setPriorityOrderStr(e.target.value)}
-                placeholder="admob, adx, facebook"
-                InputLabelProps={{ style: { color: '#fff' } }}
-                InputProps={{
-                  sx: {
-                    color: 'white',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.5)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#FF9BBF' },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Button
-                variant="contained"
-                startIcon={<SaveIcon />}
-                onClick={handleSavePriority}
-                fullWidth
-                sx={{ mt: { xs: 0, md: 1 }, bgcolor: '#FF9BBF', '&:hover': { bgcolor: '#FF6BA3' } }}
-              >
-                Save order
-              </Button>
-            </Grid>
-          </Grid>
         </Paper>
 
         <Paper sx={paperSx}>

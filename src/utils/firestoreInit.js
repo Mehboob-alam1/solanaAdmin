@@ -104,20 +104,7 @@ export const initializeFirestoreStructure = async (forceCreate = false) => {
       console.log('ℹ️ Global config already exists');
     }
 
-    // 2. Create/Update priority config
-    const priorityRef = ref(database, 'ads_config/priority');
-    const prioritySnap = await get(priorityRef);
-    if (!prioritySnap.exists() || forceCreate) {
-      await set(priorityRef, {
-        order: ['admob', 'adx', 'facebook']
-      });
-      console.log('✅ Created/Updated priority config');
-      createdCount++;
-    } else {
-      console.log('ℹ️ Priority config already exists');
-    }
-
-    // 3. Create/Update website redirect config
+    // 2. Create/Update website redirect config
     const websiteRedirectRef = ref(database, 'app_config/website_redirect');
     const websiteRedirectSnap = await get(websiteRedirectRef);
     if (!websiteRedirectSnap.exists() || forceCreate) {
@@ -131,7 +118,7 @@ export const initializeFirestoreStructure = async (forceCreate = false) => {
       console.log('ℹ️ Website redirect config already exists');
     }
 
-    // 4. Create/Update Facebook meta config
+    // 3. Create/Update Facebook meta config
     const facebookMetaRef = ref(database, 'app_config/meta');
     const facebookMetaSnap = await get(facebookMetaRef);
     if (!facebookMetaSnap.exists() || forceCreate) {
@@ -145,7 +132,7 @@ export const initializeFirestoreStructure = async (forceCreate = false) => {
       console.log('ℹ️ Facebook meta config already exists');
     }
 
-    // 5. Create/Update all ad slot configs
+    // 4. Create/Update all ad slot configs
     for (const slot of AD_SLOTS) {
       const slotRef = ref(database, `ads_config/${slot.id}`);
       const slotSnap = await get(slotRef);
