@@ -1,0 +1,20 @@
+/** Slot names must match the Flutter app exactly. */
+export const AD_SLOTS = [
+  { id: 'banner_home', name: 'Home Banner', type: 'Banner', location: 'Home Screen', icon: '🏠' },
+  { id: 'banner_wallet', name: 'Wallet Banner', type: 'Banner', location: 'Wallet Screen', icon: '💼' },
+  { id: 'banner_leaderboard', name: 'Leaderboard Banner', type: 'Banner', location: 'Leaderboard Screen', icon: '🏆' },
+  { id: 'banner_challenges', name: 'Challenges Banner', type: 'Banner', location: 'Challenges Screen', icon: '🎯' },
+  { id: 'banner_referrals', name: 'Referrals Banner', type: 'Banner', location: 'Referrals Screen', icon: '👥' },
+  { id: 'banner_profile', name: 'Profile Banner', type: 'Banner', location: 'Profile Screen', icon: '👤' },
+  { id: 'banner_auth', name: 'Auth Banner', type: 'Banner', location: 'Auth Screen', icon: '🔐' },
+  { id: 'banner_onboarding', name: 'Onboarding Banner', type: 'Banner', location: 'Onboarding Screens', icon: '📱' },
+  { id: 'banner_splash', name: 'Splash Banner', type: 'Banner', location: 'Splash Screen', icon: '✨' },
+  { id: 'interstitial_login', name: 'Login Interstitial', type: 'Interstitial', location: 'After Login', icon: '🚪' },
+  { id: 'interstitial_screen_transition', name: 'Screen Transition', type: 'Interstitial', location: 'Between Screens', icon: '🔄' },
+  { id: 'interstitial_challenge_complete', name: 'Challenge Complete', type: 'Interstitial', location: 'After Challenge', icon: '✅' },
+  { id: 'rewarded_challenge', name: 'Challenge Rewarded', type: 'Rewarded', location: 'Challenge Rewards', icon: '🎁' },
+  { id: 'rewarded_booster', name: 'Booster Rewarded', type: 'Rewarded', location: 'Power-up Boosters', icon: '⚡' },
+  { id: 'native_onboarding', name: 'Onboarding Native', type: 'Native', location: 'Onboarding Pages', icon: '📄' },
+  { id: 'native_auth', name: 'Auth Native', type: 'Native', location: 'Auth Screen', icon: '📋' },
+  { id: 'app_open', name: 'App Open Ad', type: 'AppOpen', location: 'App Launch', icon: '🚀' },
+];

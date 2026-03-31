@@ -1,25 +1,6 @@
 import { ref, set, get, getDatabase } from 'firebase/database';
 import app from '../firebase';
-
-// Default ad slot configurations matching FIRESTORE_AD_SETUP.md
-const DEFAULT_AD_SLOTS = [
-  { id: 'app_open', name: 'App Open Ad', type: 'AppOpen', location: 'App Launch' },
-  { id: 'banner_home', name: 'Home Banner', type: 'Banner', location: 'Home Screen' },
-  { id: 'banner_wallet', name: 'Wallet Banner', type: 'Banner', location: 'Wallet Screen' },
-  { id: 'banner_leaderboard', name: 'Leaderboard Banner', type: 'Banner', location: 'Leaderboard Screen' },
-  { id: 'banner_challenges', name: 'Challenges Banner', type: 'Banner', location: 'Challenges Screen' },
-  { id: 'banner_referrals', name: 'Referrals Banner', type: 'Banner', location: 'Referrals Screen' },
-  { id: 'banner_profile', name: 'Profile Banner', type: 'Banner', location: 'Profile Screen' },
-  { id: 'banner_auth', name: 'Auth Banner', type: 'Banner', location: 'Auth Screen' },
-  { id: 'banner_onboarding', name: 'Onboarding Banner', type: 'Banner', location: 'Onboarding Screens' },
-  { id: 'interstitial_login', name: 'Login Interstitial', type: 'Interstitial', location: 'After Login' },
-  { id: 'interstitial_screen_transition', name: 'Screen Transition', type: 'Interstitial', location: 'Between Screens' },
-  { id: 'interstitial_challenge_complete', name: 'Challenge Complete', type: 'Interstitial', location: 'After Challenge' },
-  { id: 'rewarded_challenge', name: 'Challenge Rewarded', type: 'Rewarded', location: 'Challenge Rewards' },
-  { id: 'rewarded_booster', name: 'Booster Rewarded', type: 'Rewarded', location: 'Power-up Boosters' },
-  { id: 'native_onboarding', name: 'Onboarding Native', type: 'Native', location: 'Onboarding Pages' },
-  { id: 'native_auth', name: 'Auth Native', type: 'Native', location: 'Auth Screen' },
-];
+import { AD_SLOTS } from '../constants/adConfig';
 
 // Test ad unit IDs (Google's test IDs) - matching FIRESTORE_AD_SETUP.md
 const TEST_AD_UNIT_IDS = {
@@ -165,7 +146,7 @@ export const initializeFirestoreStructure = async (forceCreate = false) => {
     }
 
     // 5. Create/Update all ad slot configs
-    for (const slot of DEFAULT_AD_SLOTS) {
+    for (const slot of AD_SLOTS) {
       const slotRef = ref(database, `ads_config/${slot.id}`);
       const slotSnap = await get(slotRef);
       
@@ -225,5 +206,5 @@ export const checkFirestoreStructure = async () => {
  * Get all ad slots configuration
  */
 export const getAllAdSlots = () => {
-  return DEFAULT_AD_SLOTS;
+  return AD_SLOTS;
 };

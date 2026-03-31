@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "_admin_allowlist": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "app_config": {
+      ".read": true,
+      ".write": "auth != null && root.child('_admin_allowlist').child(auth.uid).val() === true"
+    },
+    "ads_config": {
+      ".read": true,
+      ".write": "auth != null && root.child('_admin_allowlist').child(auth.uid).val() === true"
+    }
+  }
+}
