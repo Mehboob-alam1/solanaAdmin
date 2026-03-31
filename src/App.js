@@ -23,6 +23,7 @@ import {
   Select,
   MenuItem,
   FormControl,
+  FormHelperText,
   InputLabel,
   Accordion,
   AccordionSummary,
@@ -39,6 +40,7 @@ import {
   Facebook as FacebookIcon,
   ExpandMore as ExpandMoreIcon,
   Code as CodeIcon,
+  InfoOutlined as InfoOutlinedIcon,
 } from '@mui/icons-material';
 import { ref, get, set, getDatabase } from 'firebase/database';
 import app from './firebase';
@@ -423,19 +425,59 @@ function App() {
               <WarningIcon sx={{ color: '#ff5252' }} />
             )}
           </Box>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
-            app_config/website_redirect — URL validation, mode, click_rate (0–100), click_frequency (≥ 1)
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.55)', mb: 2 }}>
+            Path: <code style={{ color: '#FF9BBF' }}>app_config/website_redirect</code> — opens this URL in an in-app
+            browser when your Flutter logic allows.
           </Typography>
+
+          <Alert
+            icon={<InfoOutlinedIcon sx={{ color: '#90caf9 !important' }} />}
+            severity="info"
+            sx={{
+              mb: 3,
+              bgcolor: 'rgba(33,150,243,0.12)',
+              color: 'rgba(255,255,255,0.92)',
+              border: '1px solid rgba(100,181,246,0.35)',
+              '& .MuiAlert-message': { width: '100%' },
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#fff', mb: 1 }}>
+              Mode — when the URL may open
+            </Typography>
+            <Box component="ul" sx={{ m: 0, pl: 2.25, '& li': { mb: 0.75 } }}>
+              <li>
+                <strong>always</strong> — Normal behavior: the app follows its own rules for opening the link (no
+                random dice, no “every Nth tap” counting). Best default for most promos.
+              </li>
+              <li>
+                <strong>random</strong> — On each <em>eligible</em> user action, the app rolls a chance:{' '}
+                <strong>Click rate (%)</strong> is the probability (0–100) the browser opens. Example: 35 means
+                roughly a 35% chance each time. Only used when <strong>Every eligible action</strong> is <strong>off</strong>.
+              </li>
+              <li>
+                <strong>counter</strong> — Open the link every <strong>N</strong> eligible actions.{' '}
+                <strong>Every N actions</strong> is that number (e.g. 5 = open on every 5th action). Only used when{' '}
+                <strong>Every eligible action</strong> is <strong>off</strong>.
+              </li>
+            </Box>
+            <Typography variant="body2" sx={{ mt: 1.5, color: 'rgba(255,255,255,0.85)' }}>
+              <strong>Every eligible action</strong> — When <strong>on</strong>, redirect logic runs on every
+              configured tap (your app treats this like “always”-style frequency). When <strong>off</strong>, use{' '}
+              <strong>random</strong> (with %) or <strong>counter</strong> (with N) as above.
+            </Typography>
+          </Alert>
+
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}>
               <TextField
                 fullWidth
-                label="url"
+                label="URL"
                 value={websiteForm.url}
                 onChange={(e) => setWebsiteForm((f) => ({ ...f, url: e.target.value }))}
                 error={!!websiteFieldErrors.url}
                 helperText={
-                  websiteFieldErrors.url || 'Full URL or domain (the app may add https:// if missing)'
+                  websiteFieldErrors.url ||
+                  'Full URL or domain only — the app adds https:// if the scheme is missing.'
                 }
                 InputLabelProps={{ style: { color: '#fff' } }}
                 InputProps={{
@@ -449,40 +491,62 @@ function App() {
               />
             </Grid>
             <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={websiteForm.enabled}
-                    onChange={(e) => setWebsiteForm((f) => ({ ...f, enabled: e.target.checked }))}
-                    sx={{
-                      '& .MuiSwitch-switchBase.Mui-checked': { color: '#FF9BBF' },
-                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#FF9BBF' },
-                    }}
-                  />
-                }
-                label={<Typography sx={{ color: 'white', fontWeight: 600 }}>enabled</Typography>}
-              />
+              <Tooltip title="Master switch for website redirect in the app.">
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={websiteForm.enabled}
+                      onChange={(e) => setWebsiteForm((f) => ({ ...f, enabled: e.target.checked }))}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': { color: '#FF9BBF' },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#FF9BBF' },
+                      }}
+                    />
+                  }
+                  label={<Typography sx={{ color: 'white', fontWeight: 600 }}>Enabled</Typography>}
+                />
+              </Tooltip>
             </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={websiteForm.every_click}
-                    onChange={(e) => setWebsiteForm((f) => ({ ...f, every_click: e.target.checked }))}
-                    sx={{
-                      '& .MuiSwitch-switchBase.Mui-checked': { color: '#FF9BBF' },
-                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#FF9BBF' },
-                    }}
-                  />
-                }
-                label={<Typography sx={{ color: 'white' }}>every_click</Typography>}
-              />
+
+            <Grid item xs={12}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                Behavior
+              </Typography>
             </Grid>
-            <Grid item xs={12} md={4}>
+
+            <Grid item xs={12} md={6}>
+              <Tooltip title="Matches Firebase field: every_click">
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={websiteForm.every_click}
+                      onChange={(e) => setWebsiteForm((f) => ({ ...f, every_click: e.target.checked }))}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': { color: '#FF9BBF' },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#FF9BBF' },
+                      }}
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography sx={{ color: 'white', fontWeight: 600 }}>Every eligible action</Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>
+                        Field: <code style={{ color: '#FF9BBF' }}>every_click</code>
+                      </Typography>
+                    </Box>
+                  }
+                />
+              </Tooltip>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel sx={{ color: 'rgba(255,255,255,0.8)' }}>mode</InputLabel>
+                <InputLabel id="website-redirect-mode-label" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  Mode
+                </InputLabel>
                 <Select
-                  label="mode"
+                  labelId="website-redirect-mode-label"
+                  label="Mode"
                   value={websiteForm.mode}
                   onChange={(e) => setWebsiteForm((f) => ({ ...f, mode: e.target.value }))}
                   sx={{
@@ -491,17 +555,54 @@ function App() {
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.5)' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#FF9BBF' },
                   }}
+                  MenuProps={{ PaperProps: { sx: { bgcolor: '#1a1d26', color: 'white' } } }}
                 >
-                  <MenuItem value="always">always</MenuItem>
-                  <MenuItem value="random">random</MenuItem>
-                  <MenuItem value="counter">counter</MenuItem>
+                  <MenuItem value="always">
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        always
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', display: 'block' }}>
+                        App rules only — no % or every-N
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="random">
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        random
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', display: 'block' }}>
+                        Chance per action — set Click rate (%) below
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="counter">
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        counter
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', display: 'block' }}>
+                        Every Nth action — set Every N actions below
+                      </Typography>
+                    </Box>
+                  </MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: 'rgba(255,255,255,0.55)' }}>
+                  Stored as <code style={{ color: '#FF9BBF' }}>mode</code>:{' '}
+                  {websiteForm.mode === 'always' && 'Uses standard open logic (default if omitted in app).'}
+                  {websiteForm.mode === 'random' &&
+                    'Uses click_rate % per eligible action when Every eligible action is off.'}
+                  {websiteForm.mode === 'counter' &&
+                    'Uses click_frequency (N) when Every eligible action is off.'}
+                </FormHelperText>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={4}>
+
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="click_rate (0–100)"
+                label="Click rate (%)"
                 type="number"
                 disabled={websiteForm.every_click || websiteForm.mode !== 'random'}
                 value={websiteForm.click_rate === '' ? '' : websiteForm.click_rate}
@@ -510,7 +611,10 @@ function App() {
                 }
                 error={!!websiteFieldErrors.click_rate}
                 helperText={
-                  websiteFieldErrors.click_rate || 'Only when mode is random and every_click is false'
+                  websiteFieldErrors.click_rate ||
+                  (websiteForm.every_click || websiteForm.mode !== 'random'
+                    ? 'Turn off “Every eligible action” and set Mode to random to use this field.'
+                    : 'Probability 0–100 each time an eligible action happens. Field: click_rate')
                 }
                 InputLabelProps={{ style: { color: '#fff' } }}
                 InputProps={{
@@ -518,13 +622,14 @@ function App() {
                     color: 'white',
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
                   },
+                  inputProps: { min: 0, max: 100, step: 1 },
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="click_frequency (≥1)"
+                label="Every N actions"
                 type="number"
                 disabled={websiteForm.every_click || websiteForm.mode !== 'counter'}
                 value={websiteForm.click_frequency === '' ? '' : websiteForm.click_frequency}
@@ -533,7 +638,10 @@ function App() {
                 }
                 error={!!websiteFieldErrors.click_frequency}
                 helperText={
-                  websiteFieldErrors.click_frequency || 'Only when mode is counter and every_click is false'
+                  websiteFieldErrors.click_frequency ||
+                  (websiteForm.every_click || websiteForm.mode !== 'counter'
+                    ? 'Turn off “Every eligible action” and set Mode to counter to use this field.'
+                    : 'Open the URL on every Nth eligible action (integer ≥ 1). Example: 5 = every 5th. Field: click_frequency')
                 }
                 InputLabelProps={{ style: { color: '#fff' } }}
                 InputProps={{
@@ -541,6 +649,7 @@ function App() {
                     color: 'white',
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
                   },
+                  inputProps: { min: 1, step: 1 },
                 }}
               />
             </Grid>

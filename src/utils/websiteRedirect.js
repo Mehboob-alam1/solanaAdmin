@@ -53,14 +53,14 @@ export function validateWebsiteRedirectForm(form) {
   if (form.mode === 'random' && !form.every_click) {
     const n = form.click_rate === '' ? NaN : Number(form.click_rate);
     if (Number.isNaN(n) || n < 0 || n > 100) {
-      errs.click_rate = 'Enter a number between 0 and 100.';
+      errs.click_rate = 'Enter a click rate between 0 and 100.';
     }
   }
   if (form.mode === 'counter' && !form.every_click) {
     const raw = form.click_frequency === '' ? '' : String(form.click_frequency).trim();
     const n = raw === '' ? NaN : parseInt(raw, 10);
     if (!Number.isFinite(n) || n < 1 || String(n) !== raw) {
-      errs.click_frequency = 'Enter an integer ≥ 1.';
+      errs.click_frequency = 'Enter a whole number N ≥ 1 (open every Nth action).';
     }
   }
   return errs;
